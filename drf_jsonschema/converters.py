@@ -1,4 +1,5 @@
 # convert a serializer to a JSON Schema.
+from rest_framework.relations import ManyRelatedField
 from rest_framework.settings import api_settings
 from rest_framework import serializers
 from django.urls.exceptions import NoReverseMatch
@@ -279,7 +280,7 @@ class PrimaryKeyRelatedFieldConverter:
         else:
             return {
                 'type': 'integer',
-                'oneOf': [
+                'anyOf' if isinstance(field.parent, ManyRelatedField) else 'oneOf': [
                     {'const': opt.value,
                     'title': opt.display_text}
                     for opt in field.iter_options()
