@@ -1,6 +1,7 @@
 # convert a serializer to a JSON Schema.
 from rest_framework.settings import api_settings
 from rest_framework import serializers
+from django.urls.exceptions import NoReverseMatch
 from .convert import converter, field_to_jsonschema
 from .fields import JSONSchemaField, SerializerJSONField
 
@@ -261,7 +262,7 @@ class ManyRelatedFieldConverter:
     def convert(self, field):
         return {
             'type': 'array',
-            'items': field_to_jsonschema(field.child_relation)
+            'items': field_to_jsonschema(field.child_relation),
         }
 
 
@@ -270,9 +271,35 @@ class PrimaryKeyRelatedFieldConverter:
     field_class = serializers.PrimaryKeyRelatedField
 
     def convert(self, field):
-        return {
-            'type': 'integer'
-        }
+        from rest_framework.reverse import reverse
+        if field.read_only:
+            return {
+                'type': 'integer'
+            }
+        else:
+            return {
+                'type': 'integer',
+                'oneOf': [
+                    {'const': opt.value,
+                    'title': opt.display_text}
+                    for opt in field.iter_options()
+                ]
+            }
+
+
+        # try:
+        #     url = reverse(f'{field.queryset.model.__name__.lower()}-list')
+        #     return {
+        #         'type': 'object',
+        #         'x-fromUrl': url,
+        #         # 'x-itemsProp': '',
+        #         'x-itemTitle': 'title',
+        #         'x-itemKey': 'href'
+        #     }
+        # except NoReverseMatch:
+        #     return {
+        #         'type': 'integer'
+        #     }
 
 
 @converter
