@@ -272,20 +272,14 @@ class PrimaryKeyRelatedFieldConverter:
     field_class = serializers.PrimaryKeyRelatedField
 
     def convert(self, field):
-        from rest_framework.reverse import reverse
-        if field.read_only:
-            return {
-                'type': 'integer'
-            }
-        else:
-            return {
-                'type': 'integer',
-                'anyOf' if isinstance(field.parent, ManyRelatedField) else 'oneOf': [
-                    {'const': opt.value,
-                    'title': opt.display_text}
-                    for opt in field.iter_options()
-                ]
-            }
+        return {
+            'type': 'integer',
+            'anyOf' if isinstance(field.parent, ManyRelatedField) else 'oneOf': [
+                {'const': opt.value,
+                'title': opt.display_text}
+                for opt in field.iter_options()
+            ]
+        }
 
 
         # try:
